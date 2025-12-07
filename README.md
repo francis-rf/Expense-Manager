@@ -1,4 +1,4 @@
-# 💰 Expense Manager
+# 💰 Expense Tracker
 
 A modern, full-stack expense tracking application with beautiful glassmorphism UI, real-time analytics, and comprehensive testing.
 
