@@ -15,9 +15,13 @@ load_dotenv()
 
 # Define the project root path (go up from backend to project root)
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+<<<<<<< HEAD
 LOG_DIR = os.path.join(PROJECT_ROOT, 'logs')
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_FILE = os.path.join(LOG_DIR, 'app.log')
+=======
+LOG_FILE = os.path.join(PROJECT_ROOT, 'app.log')
+>>>>>>> 6d7a6676ef3347cbccc0f7da3070b7d2269a13d5
 
 # Ensure the log file path is accessible
 print(f"Logging to: {LOG_FILE}")
@@ -64,6 +68,7 @@ app.add_middleware(
 
 # --- Pydantic Models ---
 
+<<<<<<< HEAD
 class ExpenseCreate(BaseModel):
     """Pydantic model for creating a new expense (without date)."""
     category: str
@@ -76,6 +81,13 @@ class Expense(BaseModel):
     notes: str
     amount: float = Field(gt=0, description="Amount must be greater than 0")
     expense_date: date
+=======
+class Expense(BaseModel):
+    """Pydantic model for representing a single expense item."""
+    category: str
+    notes: str
+    amount: float = Field(gt=0, description="Amount must be greater than 0")
+>>>>>>> 6d7a6676ef3347cbccc0f7da3070b7d2269a13d5
 
 class ExpenseSummary(BaseModel):
     """Pydantic model for representing a category-wise expense summary."""
@@ -155,7 +167,11 @@ def get_expenses_for_date(expense_date: date):
         raise HTTPException(status_code=500, detail="An internal server error occurred while fetching expenses.")
 
 @app.post('/expenses/{expense_date}', response_model=ExpenseCreateResponse)
+<<<<<<< HEAD
 def add_expenses_for_date(expense_date: date, expenses: List[ExpenseCreate]):
+=======
+def add_expenses_for_date(expense_date: date, expenses: List[Expense]):
+>>>>>>> 6d7a6676ef3347cbccc0f7da3070b7d2269a13d5
     """
     Adds one or more new expense records for a specific date.
     Returns the IDs of the inserted records.
