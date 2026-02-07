@@ -166,6 +166,11 @@ curl -X POST "http://localhost:8000/expenses/2025-12-07" \
 curl "http://localhost:8000/summary?start_date=2025-12-01&end_date=2025-12-07"
 ```
 
+## 📸 Screenshots
+
+![Application Interface](screenshots/image.png)
+_Expense-Manager Application Interface_
+
 ## 🧪 Testing
 
 Run all tests:
