@@ -12,7 +12,7 @@ COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 
 # Expose backend port
-EXPOSE 8000
+EXPOSE 8080
 
 # Run FastAPI server
-CMD ["fastapi", "run", "backend/server.py", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "backend.server:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -25,5 +25,5 @@ jobs:
           application_name: ${{ secrets.EB_APP_NAME }}
           environment_name: ${{ secrets.EB_ENV_NAME }}
           region: ${{ secrets.AWS_REGION }}
-          version_label: v${{ github.run_number }}
+          version_label: v${{ github.run_number }}-${{ github.run_attempt }}
           deployment_package: expense-manager.zip
