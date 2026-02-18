@@ -1,0 +1,43 @@
+# Git
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# Tests
+tests/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+*.md
+SETUP_GUIDE.md
+screenshots/
+
+# Coverage reports
+.coverage
+htmlcov/
+.pytest_cache/

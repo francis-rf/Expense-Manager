@@ -37,13 +37,9 @@ ENV/
 .DS_Store
 
 # Logs
-<<<<<<< HEAD
-logs/*.log
-=======
 *.log
 logs/
 app.log
->>>>>>> 6d7a6676ef3347cbccc0f7da3070b7d2269a13d5
 
 # Database
 *.db
@@ -72,3 +68,6 @@ Thumbs.db
 # Project specific
 *.pyc
 .python-version
+
+expense-manager.zip
+mysql
