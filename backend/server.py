@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from datetime import date
 from .db_helper import ExpenseDatabase
 from pydantic import BaseModel, Field
@@ -62,6 +64,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Serve Frontend Static Files ---
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend')
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
 # --- Pydantic Models ---
 
 class ExpenseCreate(BaseModel):
@@ -98,20 +105,15 @@ class ExpenseDeleteResponse(BaseModel):
 @app.get('/')
 def root():
     """
-    Root endpoint providing API information.
+    Serve the frontend index.html
     """
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'frontend', 'index.html')
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path)
     return {
         "name": "Expense Manager API",
         "version": "1.0.0",
-        "status": "operational",
-        "endpoints": {
-            "GET /": "API information",
-            "GET /health": "Health check",
-            "GET /expenses/{date}": "Get expenses for a date",
-            "POST /expenses/{date}": "Add expenses for a date",
-            "DELETE /expenses/{date}": "Delete expenses for a date",
-            "GET /summary": "Get expense summary (requires start_date and end_date params)"
-        }
+        "status": "operational"
     }
 
 @app.get('/health')

@@ -3,9 +3,10 @@
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-orange.svg)
+![AWS](https://img.shields.io/badge/AWS-Elastic%20Beanstalk-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-A full-stack expense tracking application with glassmorphism UI, real-time analytics, and comprehensive testing. Built with FastAPI backend and vanilla JavaScript frontend.
+A full-stack expense tracking application with glassmorphism UI, real-time analytics, and comprehensive testing. Built with FastAPI backend serving both the REST API and the vanilla JavaScript frontend as a single unified server.
 
 ## 🎯 Features
 
@@ -16,30 +17,116 @@ A full-stack expense tracking application with glassmorphism UI, real-time analy
 - **MySQL Database** — Persistent storage with parameterized queries
 - **Comprehensive Testing** — 41+ test cases covering all functionality
 - **Logging** — File and console logging for debugging
+- **Single Server** — Frontend served as static files from the FastAPI backend
+
+## ☁️ AWS Deployment Architecture
+
+**Live URL:** `http://<elastic-beanstalk-url>`
+
+### Architecture
+
+```
+GitHub Push
+    ↓
+GitHub Actions (CI/CD)
+    ↓ Deploy
+Elastic Beanstalk (Python + Docker)
+    ↓ connects
+RDS MySQL (managed database)
+    ↓ fetches credentials
+AWS Secrets Manager (DB credentials)
+```
+
+### AWS Services Used
+
+| Service | Purpose |
+|---------|---------|
+| **Elastic Beanstalk** | Hosts the FastAPI application (auto-scaling, load balancing) |
+| **RDS MySQL** | Managed relational database (automated backups, high availability) |
+| **Secrets Manager** | Stores database credentials securely (no .env files on server) |
+| **IAM Role** | Grants Beanstalk permission to access Secrets Manager |
+| **GitHub Actions** | Auto-deploys on every push to main branch |
+
+### Deployment Steps
+
+**1. Create RDS MySQL instance**
+```
+AWS Console → RDS → Create database → MySQL
+- Template: Free tier
+- DB identifier: expense-manager-db
+- Username: admin
+- Enable public access: No (private within VPC)
+```
+
+**2. Store DB credentials in Secrets Manager**
+```bash
+# AWS Console → Secrets Manager → Store a new secret
+# Secret name: expense-manager/db-credentials
+# Keys: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+```
+
+**3. Create IAM Role for Elastic Beanstalk**
+```
+IAM → Roles → Create role → EC2
+Attach: SecretsManagerReadWrite
+Name: expense-manager-eb-role
+```
+
+**4. Create Elastic Beanstalk environment**
+```
+Elastic Beanstalk → Create environment → Web server environment
+- Platform: Python or Docker
+- Upload your application code as a zip
+- Attach IAM instance profile: expense-manager-eb-role
+```
+
+**5. Set environment variables in Beanstalk**
+```
+Configuration → Software → Environment properties
+DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+(pulled from Secrets Manager at startup)
+```
+
+**6. GitHub Actions CI/CD**
+
+Add these secrets in GitHub → Settings → Secrets → Actions:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `EB_APP_NAME` - Elastic Beanstalk application name
+- `EB_ENV_NAME` - Elastic Beanstalk environment name
+
+Every push to `main` automatically packages and deploys the application.
+
+### Pause / Cleanup
+
+```
+# Pause: Beanstalk Console → Environment → Actions → Terminate environment
+# Full cleanup: Terminate environment → Delete application → Delete RDS instance → Delete secret
+```
 
 ## 📁 Project Structure
 
 ```
 expense-manager/
 ├── backend/
-│   ├── server.py           # FastAPI application
+│   ├── server.py           # FastAPI application (serves API + frontend)
 │   └── db_helper.py        # Database operations
 ├── frontend/
 │   ├── index.html          # Main HTML structure
 │   ├── style.css           # Glassmorphism styling
-│   └── app.js              # JavaScript logic
+│   └── app.js              # JavaScript logic (uses relative API URLs)
 ├── tests/
 │   └── backend/
 │       ├── test_db_helper.py   # Database tests
 │       └── test_server.py      # API endpoint tests
 ├── logs/                   # Application logs
 ├── schema.sql              # Database setup script
-├── SETUP_GUIDE.md          # Detailed setup instructions
+├── Dockerfile              # Container configuration
 ├── requirements.txt
 └── pyproject.toml          # Pytest configuration
 ```
 
-## 🚀 Getting Started
+## 🚀 Getting Started (Local)
 
 ### Prerequisites
 
@@ -72,8 +159,6 @@ CREATE TABLE expenses (
 );
 ```
 
-For detailed setup instructions, see [SETUP_GUIDE.md](SETUP_GUIDE.md).
-
 ### Installation
 
 1. **Clone the repository**
@@ -86,16 +171,8 @@ cd expense-manager
 2. **Set up MySQL database**
 
 ```bash
-# Login to MySQL
-mysql -u root -p
-
-# Run the schema script
-source schema.sql
-# OR
 mysql -u root -p < schema.sql
 ```
-
-This creates the `expense_manager` database and `expenses` table.
 
 3. **Install Python dependencies**
 
@@ -118,24 +195,13 @@ DB_PASSWORD=your_password_here
 DB_NAME=expense_manager
 ```
 
-5. **Run the backend**
+5. **Run the server** (serves both API and frontend)
 
 ```bash
-fastapi dev backend/server.py
+uvicorn backend.server:app --host 0.0.0.0 --port 8000
 ```
 
-Backend will start at `http://localhost:8000`
-
-6. **Run the frontend**
-
-Open `frontend/index.html` in your browser, or serve it:
-
-```bash
-cd frontend
-python -m http.server 3000
-```
-
-Frontend will be available at `http://localhost:3000`
+Open `http://localhost:8000` — the frontend loads automatically.
 
 ## 💻 Usage
 
@@ -143,7 +209,7 @@ Frontend will be available at `http://localhost:3000`
 
 | Method   | Endpoint                           | Description                |
 | -------- | ---------------------------------- | -------------------------- |
-| `GET`    | `/`                                | API information            |
+| `GET`    | `/`                                | Serves the frontend UI     |
 | `GET`    | `/health`                          | Health check               |
 | `GET`    | `/expenses/{date}`                 | Get expenses for a date    |
 | `POST`   | `/expenses/{date}`                 | Add expenses for a date    |
@@ -219,14 +285,10 @@ docker run -p 8000:8000 --env-file .env expense-manager
 
 ### Port Conflicts
 
-If port 8000 or 3000 is already in use:
+If port 8000 is already in use:
 
 ```bash
-# Backend on different port
-fastapi dev backend/server.py --port 8001
-
-# Frontend on different port
-python -m http.server 3001
+uvicorn backend.server:app --host 0.0.0.0 --port 8001
 ```
 
 ## 📄 License
